@@ -1,0 +1,101 @@
+One command static website setup on AWS S3
+
+Problem to solve
+I want to setup static website on AWS S3 under 10 minutes. Also
+
+Setup Route53 for DNS record
+Setup Cloudfront for CDN distribution
+Available options
+I couldn’t find a fast enough way to do it. Ways I tried:
+
+Setting up on AWS Console GUI - no way I am doing this again. Way too many stuff to go wrong
+Writing Cloudformation template - 
+I can tell this was not designed for human beings. 
+Documentation complexity and randomness kicks you off. It is way too complicated for such simple start
+Terraform - to learn this thing and write my own template took ~3h.
+So, really is it really not possible to setup fast?
+
+User friendly Terraform template
+That’s why I created new Github Repo, that me and other people could do it by executing single command
+
+sjevs/terraform-static-website-s3-cloudfront
+
+Follow the steps described in the README, but it is more less all about setting up your website.tfvars file:
+
+region = "eu-west-1"
+domain = ""          # jevsejev.io
+domainAlias = ""     # jevsejev_io
+subdomain = ""       # www.jevsejev.io
+subdomainAlias = ""  # www_jevsejev_io
+cdnSubDomain = ""    # cdn.jevsejev.io
+and your AWS credentials
+
+aws_access_key_id = ""
+aws_secret_key = ""
+And then execute
+
+terraform apply -var-file website.tfvars  -var-file secret.tfvars
+That’s it! Provisioning is done! now you can upload your index.html and check if it is working with S3 url. To check with your domain configure you domain to point to DNS servers provided by Route53
+
+Features
+Provisions Route53
+Provisions S3 bucket as website
+Provisions Cloudfront and uses S3 bucket as origin for asset distribution
+Terraform template covered with integration tests
+Tips
+Infrastructure as Code
+
+I recommend you to clone the repository and commit your website.tfvars to the repository, So you could provision it easily.
+
+But please never commit your AWS credentials! Someone else can use them for personal intentions.
+
+Terraform state file
+
+After you provision, terraform will create a state file terraform.tfstate. It is need for Terraform to function. So if you will need to execute it from another computer, it must be shared. One of the ways it is to use S3 for it.
+
+Remote configuration solves this problem
+
+Add S3 bucket configuration for this to your website.tf
+
+resource "aws_s3_bucket" "website_state_bucket" {
+  provider = "aws.prod"
+
+  bucket = "terraform-states"
+  acl = "private"
+  versioning {
+    enabled = true
+  }
+}
+Provision again with it with terraform apply -var-file website.tfvars -var-file secret.tfvars
+
+Then execute next command. Replace WWW.YOUR_BEBSITE.IO with your website name and region with yours
+
+terraform remote config \
+    -backend=s3 \
+    -backend-config="bucket=terraform-states" \
+    -backend-config="key=WWW.YOUR_BEBSITE.IO/terraform.tfstate" \
+    -backend-config="region=eu-west-1"
+After execution lets set terraform to use the new configuration location by adding this to your website.tf:
+
+resource "terraform_remote_state" "website_state" {
+  depends_on = ["aws_s3_bucket.website_state_bucket"]
+  backend = "s3"
+  config {
+    bucket = "terraform-states"
+    key = "${var.subdomain}/terraform.tfstate"
+    region = "${var.region}"
+    access_key = "${var.aws_access_key_id}"
+    secret_key = "${var.aws_secret_key}"
+  }
+}
+AWS S3 Costs
+
+Serverless website costs on AWS S3
+
+Summary
+Now you know there is a template waiting for you if ever need to setup a website really quick.
+Also, worth mentioning to provision anything on AWS the most efficient tool is Terraform. 
+Studying it will return great benefits for you!+
+
+
+http://blog.jevsejev.io/2016/06/12/one-command-static-website-on-aws-s3-cloudfront-under-10-minutes/
