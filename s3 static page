@@ -68,12 +68,12 @@ resource "aws_s3_bucket" "website_state_bucket" {
 }
 Provision again with it with terraform apply -var-file website.tfvars -var-file secret.tfvars
 
-Then execute next command. Replace WWW.YOUR_BEBSITE.IO with your website name and region with yours
+Then execute next command. Replace WWW.YOUR_WEBSITE.IO with your website name and region with yours
 
 terraform remote config \
     -backend=s3 \
     -backend-config="bucket=terraform-states" \
-    -backend-config="key=WWW.YOUR_BEBSITE.IO/terraform.tfstate" \
+    -backend-config="key=WWW.YOUR_WEBSITE.IO/terraform.tfstate" \
     -backend-config="region=eu-west-1"
 After execution lets set terraform to use the new configuration location by adding this to your website.tf:
 
