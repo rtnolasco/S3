@@ -9,7 +9,7 @@ Basic AWS Config Json Guide:
 * Once the bucket is created, click on it to view its details.
 * Click on the "Permissions" tab and select "Bucket Policy".
 
-* In the Bucket Policy Editor, paste the following code to make the bucket public: **( refer to json file ) **
+* In the Bucket Policy Editor, paste the following code to make the bucket public: **( refer to json file )
 
 * Replace "your-bucket-name" with the actual name of your bucket.
 Click "Save".
